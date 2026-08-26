@@ -782,6 +782,16 @@ function drawBuilding(){
   if(state==='collapse'){ drawTowerImg('t3', B.sink); return; }
   drawTowerImg(curKey(), 0);
 }
+/* árboles junto a la base de la torre: decoración por código, independiente del sprite */
+function drawTrees(){
+  const off=[-34,-24, B.w+24, B.w+34];
+  off.forEach((dx,i)=>{
+    const x=Math.round(B.x+dx), trunkH=6, canH=7+(i%2);
+    px(x-1, GROUND-trunkH, 2, trunkH, '#3a2e22');
+    px(x-3, GROUND-trunkH-canH, 6, canH, '#3c6b3a');
+    px(x-2, GROUND-trunkH-canH, 4, 2, '#5a9152');
+  });
+}
 
 /* ================= ROBERTO (SPRITES) ================= */
 function currentSprite(){
@@ -984,6 +994,7 @@ function render(){
                       && !(RB.atk && RB.atk.k==='tatsu');
   if(behindTower) drawRoberto();
   drawBuilding();
+  drawTrees();
   drawPeople();
   const bp=beamActive();
   if(bp) drawBeam(bp);
