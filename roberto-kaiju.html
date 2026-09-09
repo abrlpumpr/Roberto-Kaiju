@@ -40,6 +40,10 @@
   .t{ background:#4a3b16; border-color:#e0b054; color:#ffe9b8; }
   .j{ background:#2e2a3c; border-color:#6a5f80; }
   #hint{ font-size:10px; letter-spacing:1px; opacity:.5; margin:0 0 4px; text-align:center; }
+  #muteBtn{ position:absolute; top:5px; right:5px; z-index:5; width:24px; height:24px; padding:0;
+    background:rgba(20,16,28,.6); border:2px solid var(--edge); border-radius:6px; color:var(--ink);
+    font-size:12px; line-height:1; cursor:pointer; }
+  #muteBtn:active{ transform:translateY(1px); filter:brightness(1.25); }
   @media (max-height:660px){ .bt{height:48px;min-width:48px;} #hint{display:none;} }
 </style>
 </head>
@@ -47,6 +51,7 @@
 <div id="wrap">
   <canvas id="game" width="384" height="216"></canvas>
   <div id="crt"></div>
+  <button id="muteBtn" title="Música">🔊</button>
 </div>
 <div id="finalWrap"><button id="final">☢ ALIENTO FINAL ☢</button></div>
 <div id="pad">
@@ -141,13 +146,52 @@ function sfx(n){
   else if(n==='jump'){ tone(200,430,.12,'square',.09); }
   else if(n==='grab'){ noise(.07,.12,1200,500); tone(150,240,.08,'square',.07); }
   else if(n==='land'){ noise(.12,.18,320,120); }
-  else if(n==='roar'){ tone(160,48,.85,'sawtooth',.22); tone(82,38,.85,'square',.14); noise(.6,.16,320,140); }
+  else if(n==='roar'){ tone(160,48,.85,'sawtooth',.22); tone(82,38,.85,'square',.14); tone(42,26,.9,'sine',.13); noise(.6,.16,320,140); }
+  else if(n==='stomp'){ noise(.15,.20,220,70); tone(88,42,.13,'square',.11); }
   else if(n==='tick'){ tone(950,950,.05,'square',.07); }
   else if(n==='collapse'){ noise(1.8,.42,220,80); tone(70,26,1.5,'sawtooth',.16); }
   else if(n==='boom'){ noise(1.2,.45,500,90); tone(55,24,1.1,'sawtooth',.2); }
   else if(n==='win'){ [523,659,784,1047,1319].forEach((f,i)=>setTimeout(()=>tone(f,f,.15,'square',.13),i*120)); }
   else if(n==='lose'){ [392,349,294,220].forEach((f,i)=>setTimeout(()=>tone(f,f*.9,.3,'square',.12),i*230)); }
   else if(n==='ready'){ tone(880,1320,.14,'square',.12); }
+}
+
+/* ================= MÚSICA DE FONDO (suspenso, estilo kaiju) ================= */
+/* Drone grave de dos osciladores desafinados (efecto "beating" ominoso) +
+   latido de bajo que acelera con la tensión (integridad de la torre / tiempo bajo). */
+let musicOn=true, mDrone1=null, mDrone2=null, mDroneGain=null, mFilt=null, mTimer=null, mStep=0;
+function musicStart(){
+  if(!musicOn) return;
+  const a=ac(); if(!a) return;
+  if(!mDrone1){
+    mDroneGain=a.createGain(); mDroneGain.gain.value=0;
+    mFilt=a.createBiquadFilter(); mFilt.type='lowpass'; mFilt.frequency.value=200; mFilt.Q.value=1.2;
+    mDrone1=a.createOscillator(); mDrone1.type='sawtooth'; mDrone1.frequency.value=55;
+    mDrone2=a.createOscillator(); mDrone2.type='sawtooth'; mDrone2.frequency.value=55.7;
+    mDrone1.connect(mFilt); mDrone2.connect(mFilt); mFilt.connect(mDroneGain); mDroneGain.connect(a.destination);
+    mDrone1.start(); mDrone2.start();
+  }
+  mDroneGain.gain.cancelScheduledValues(a.currentTime);
+  mDroneGain.gain.linearRampToValueAtTime(.055, a.currentTime+1.4);
+  if(!mTimer){ mStep=0; mTimer=setInterval(musicTick,140); }
+}
+function musicStop(fast){
+  const a=ac();
+  if(mDroneGain && a){ mDroneGain.gain.cancelScheduledValues(a.currentTime);
+    mDroneGain.gain.linearRampToValueAtTime(0, a.currentTime+(fast?.3:1.1)); }
+  if(mTimer){ clearInterval(mTimer); mTimer=null; }
+}
+function musicTick(){
+  if(!musicOn || (state!=='play'&&state!=='finisher'&&state!=='collapse')) return;
+  mStep++;
+  const tension = state==='play' ? 1-integrity() : 1;
+  const urgent = state==='play' && time<15;
+  const beatEvery = (urgent||state!=='play') ? 2 : (tension>.55 ? 3 : 4);
+  if(mStep%beatEvery===0) tone(60,44,.15,'sine',.10);
+  if(mStep%beatEvery===1) tone(56,40,.11,'sine',.065);
+  const a=ac();
+  if(mFilt && a) mFilt.frequency.setTargetAtTime(190+tension*400+(urgent?180:0), a.currentTime, .5);
+  if(Math.random()<(.035+tension*.09)) tone(ri(680,1150),ri(480,860),.17,'triangle',.04);
 }
 
 /* ================= INPUT ================= */
@@ -173,12 +217,19 @@ document.querySelectorAll('.bt').forEach(b=>{
   b.addEventListener('contextmenu',e=>e.preventDefault());
 });
 btnFinal.addEventListener('pointerdown',e=>{ e.preventDefault(); ac(); if(state==='play'&&finalReady) doFinisher(); });
+const muteBtn=document.getElementById('muteBtn');
+muteBtn.addEventListener('pointerdown',e=>{
+  e.preventDefault(); e.stopPropagation(); ac();
+  musicOn=!musicOn; muteBtn.textContent=musicOn?'🔊':'🔇';
+  if(musicOn){ if(state==='play'||state==='finisher'||state==='collapse') musicStart(); }
+  else musicStop(true);
+});
 cvs.addEventListener('pointerdown',e=>{ e.preventDefault(); ac(); pressStart(); });
 document.addEventListener('contextmenu',e=>e.preventDefault());
 function pressStart(){
-  if(state==='title'){ resetGame(); state='play'; sfx('roar'); }
-  else if(state==='win' && RB.animT>=WIN_REVEAL){ resetGame(); state='play'; sfx('roar'); }
-  else if(state==='lose' && RB.animT>=DEFEAT_REVEAL){ resetGame(); state='play'; sfx('roar'); }
+  if(state==='title'){ resetGame(); state='play'; sfx('roar'); musicStart(); }
+  else if(state==='win' && RB.animT>=WIN_REVEAL){ resetGame(); state='play'; sfx('roar'); musicStart(); }
+  else if(state==='lose' && RB.animT>=DEFEAT_REVEAL){ resetGame(); state='play'; sfx('roar'); musicStart(); }
 }
 
 /* ================= MUNDO ================= */
@@ -205,9 +256,10 @@ const FIREPTS=[{fx:.50,fy:.06},{fx:.30,fy:.16},{fx:.70,fy:.12},{fx:.45,fy:.26}];
 /* --- Roberto --- */
 const RB={ x:64, y:GROUND, vy:0, vx:0, onG:true, face:1, walk:0,
            atk:null, cd:0, landT:0, climb:null, climbPh:0, anim:'idle', animT:0 };
+let lastWalkFrame=-1;
 
 function resetGame(){
-  score=0; time=120; hits=0; shake=0; lastSec=999;
+  score=0; time=120; hits=0; shake=0; lastSec=999; lastWalkFrame=-1;
   finalReady=false; finisherT=0; endT=0; hitStop=0; flash=0;
   btnFinal.classList.remove('show');
   debris=[]; smoke=[]; sparks=[]; nums=[]; flames=[]; cracksG=[]; cars=[];
@@ -416,7 +468,7 @@ function update(dt){
     if(sec!==lastSec){ lastSec=sec; if(sec<=10&&sec>0) sfx('tick'); }
     if(time<=0){ time=0; state='lose'; RB.animT=0; RB.climb=null;
       RB.y=GROUND; RB.onG=true;
-      btnFinal.classList.remove('show'); finalReady=false; sfx('lose'); return; }
+      btnFinal.classList.remove('show'); finalReady=false; sfx('lose'); musicStop(); return; }
 
     if(RB.cd>0) RB.cd-=dt;
 
@@ -444,6 +496,10 @@ function update(dt){
         const spd=(RB.atk?0.5:(RB.onG?1.5:2.4))*d60;
         if(keys.L&&!keys.R){ RB.x=clampX(RB.x-spd); if(!RB.atk)RB.face=-1; RB.walk+=d60; }
         else if(keys.R&&!keys.L){ RB.x=clampX(RB.x+spd); if(!RB.atk)RB.face=1; RB.walk+=d60; }
+        if(RB.onG&&(keys.L||keys.R)){
+          const wf=((RB.walk/6)|0)%8;
+          if(wf!==lastWalkFrame){ lastWalkFrame=wf; if(wf===0||wf===4) sfx('stomp'); }
+        }
       }
       // agarrarse del muro caminando o flotando pegado a él
       if(!RB.atk && towerSolid()){
@@ -563,7 +619,7 @@ function update(dt){
     if(endT>.4) crackGround(B.x+rnd(-20,B.w+20), rnd(3,7));
     if(B.sink>=curH()+16){
       state='win'; RB.anim='celebrate'; RB.animT=0;
-      const bonus=Math.ceil(time)*100; B.bonus=bonus; score+=bonus; sfx('win'); sfx('roar');
+      const bonus=Math.ceil(time)*100; B.bonus=bonus; score+=bonus; sfx('win'); sfx('roar'); musicStop(true);
     }
   }
   if(state==='win'||state==='lose'){ RB.animT+=dt;

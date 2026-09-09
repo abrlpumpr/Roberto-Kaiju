@@ -30,7 +30,7 @@ Al llegar al borde de la torre caminando (o flotando pegado a ella) puedes agarr
 - **Cámara vertical** que sigue a Roberto al escalar para revelar los pisos altos.
 - **Civiles a escala** que huyen de la base de la torre cuando se le hace daño y se detienen al cesar el ataque.
 - **Fondo**: skyline nocturno estilo CDMX/Reforma (Torre Reforma, Torre Latinoamericana, Ángel de la Independencia, luna, estrellas, neones parpadeantes) y avenida con coches que cruzan sin chocar.
-- **Audio 8-bit** generado por código con Web Audio API (sin archivos de sonido), con efectos por acción (mordida, golpe, colapso, victoria/derrota, etc.).
+- **Audio 8-bit** generado por código con Web Audio API (sin archivos de sonido): efectos por acción (mordida, golpe, pisotón al caminar, colapso, victoria/derrota, etc.) más una música de fondo de suspenso (drone grave + latido que se acelera según la integridad de la torre y el tiempo restante) que suena mientras la partida está en curso. Botón 🔊/🔇 arriba a la derecha del canvas para silenciar solo la música.
 - HUD táctil (D-pad + botones de ataque) para jugar desde móvil, además del teclado.
 
 ## Estructura del proyecto
