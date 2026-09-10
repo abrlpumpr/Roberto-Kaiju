@@ -19,15 +19,20 @@
     border:3px solid #08060d; box-shadow:0 0 0 2px #4e4258, 0 0 36px rgba(90,200,255,.16), 0 16px 44px rgba(0,0,0,.7); }
   #crt{ position:absolute; inset:0; pointer-events:none; mix-blend-mode:multiply; opacity:.15;
     background:repeating-linear-gradient(to bottom, #000 0px, #000 1px, transparent 1px, transparent 3px); }
-  #finalWrap{ height:38px; display:flex; align-items:center; }
   #final{
-    display:none; padding:9px 20px; border-radius:9px; cursor:pointer;
-    background:linear-gradient(#37c4ff,#0e63c8); border:3px solid #eaffff; border-bottom-width:6px;
+    display:none; position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
+    flex-direction:column; align-items:center; gap:6px; z-index:6;
+    padding:16px 22px; border-radius:16px; cursor:pointer; line-height:1.3; max-width:88%;
+    background:linear-gradient(#37c4ff,#0e63c8); border:4px solid #eaffff; border-bottom-width:9px;
     color:#fff; font:bold 14px "Courier New",monospace; letter-spacing:2px;
     animation:pulse .55s steps(2) infinite; text-shadow:0 2px 0 #063a6e;
+    box-shadow:0 12px 30px rgba(0,0,0,.55);
   }
-  #final.show{ display:block; }
-  #final:active{ transform:translateY(3px); border-bottom-width:3px; }
+  #final .mainTxt{ font-size:22px; }
+  #final .subTxt{ font-size:11px; letter-spacing:1px; opacity:.92; }
+  #final.show{ display:flex; }
+  #final:active{ transform:translate(-50%,calc(-50% + 4px)); border-bottom-width:5px; }
+  @media (max-width:420px){ #final .mainTxt{font-size:17px;} #final .subTxt{font-size:9px;} #final{padding:12px 16px;} }
   @keyframes pulse{ 0%{ box-shadow:0 0 0 0 rgba(120,230,255,.9);} 100%{ box-shadow:0 0 0 10px rgba(120,230,255,0);} }
   #pad{ display:flex; justify-content:space-between; align-items:flex-end; width:min(97vw,660px); padding:0 10px 8px; gap:14px; }
   #moveGrp{ display:flex; align-items:flex-end; gap:12px; }
@@ -79,8 +84,11 @@
   <canvas id="game" width="384" height="216"></canvas>
   <div id="crt"></div>
   <button id="muteBtn" title="Música">🔊</button>
+  <button id="final">
+    <span class="mainTxt">☢ ALIENTO FINAL ☢</span>
+    <span class="subTxt">PULSA ENTER PARA DESTRUCCIÓN FINAL</span>
+  </button>
 </div>
-<div id="finalWrap"><button id="final">☢ ALIENTO FINAL ☢</button></div>
 <div id="pad">
   <div id="moveGrp">
     <div class="joystick" aria-hidden="true">
