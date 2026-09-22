@@ -6,7 +6,7 @@ Todo el juego vive en un único archivo autocontenido: **[`roberto-kaiju.html`](
 
 ## Cómo jugar
 
-- **Objetivo**: derribar la torre antes de que se acabe el tiempo (120 s), acumulando puntos con cada golpe.
+- **Objetivo**: derribar la torre antes de que se acabe el tiempo (80 s, es decir 1:20), acumulando puntos con cada golpe.
 - **ENTER** o tap en el canvas: iniciar / reiniciar partida.
 - Cuando la integridad de la torre baja al 12%, se habilita el **☢ ALIENTO FINAL** (botón o tecla ENTER/F) para rematarla con una animación cinemática.
 
@@ -30,14 +30,15 @@ Al llegar al borde de la torre caminando (o flotando pegado a ella) puedes agarr
 - **Cámara vertical** que sigue a Roberto al escalar para revelar los pisos altos.
 - **Civiles a escala** que huyen de la base de la torre cuando se le hace daño y se detienen al cesar el ataque.
 - **Fondo**: skyline nocturno estilo CDMX/Reforma (Torre Reforma, Torre Latinoamericana, Ángel de la Independencia, luna, estrellas, neones parpadeantes) y avenida con coches que cruzan sin chocar.
-- **Audio 8-bit** generado por código con Web Audio API (sin archivos de sonido): efectos por acción (mordida, golpe, pisotón al caminar, colapso, victoria/derrota, etc.) más una música de fondo de suspenso (drone grave + latido que se acelera según la integridad de la torre y el tiempo restante) que suena mientras la partida está en curso. Botón 🔊/🔇 arriba a la derecha del canvas para silenciar solo la música.
+- **Audio 8-bit** generado por código con Web Audio API: efectos por acción (mordida, golpe, pisotón al caminar, colapso, victoria/derrota, sirenas lejanas, etc.).
+- **Música de fondo**: la pista *Concrete Teeth* (~67 s), embebida en base64 dentro del propio HTML y reproducida en bucle durante la partida, con fundido de entrada y de salida. Si el navegador no logra decodificarla, el juego cae automáticamente a la música procedural de respaldo (drone grave + latido que se acelera según la integridad de la torre y el tiempo restante). Botón 🔊/🔇 arriba a la derecha del canvas para silenciar solo la música.
 - HUD táctil (D-pad + botones de ataque) para jugar desde móvil, además del teclado.
 
 ## Estructura del proyecto
 
 | Archivo | Descripción |
 |---|---|
-| [`roberto-kaiju.html`](roberto-kaiju.html) | **El juego completo**, listo para jugar. Autocontenido (sprites embebidos en base64), ~850 KB. |
+| [`roberto-kaiju.html`](roberto-kaiju.html) | **El juego completo**, listo para jugar. Autocontenido (sprites y pista musical embebidos en base64), ~3,4 MB. |
 | [`roberto-v3_template.html`](roberto-v3_template.html) | Mismo código pero con los sprites/torre como placeholders (`/*__SPRITES__*/` y `/*__TOWER__*/`), útil para editar solo la lógica sin cargar las imágenes. |
 | [`sprites_data.js`](sprites_data.js) | `SPR_DATA`: sprites de Roberto en base64 (caminata, idle, ataques, escalada, tatsumaki, victoria, derrota). |
 | [`tower_data.js`](tower_data.js) | `TS_DATA`: sprites de la torre por estado de destrucción. |
@@ -60,8 +61,9 @@ open('roberto-kaiju.html','w').write(h)
 
 - Canvas de 384×216 px, escalado por CSS con `image-rendering: pixelated` para mantener el look retro en cualquier resolución.
 - Sin frameworks ni dependencias externas: JS vanilla en un IIFE, todo en un `<script>` dentro del propio HTML.
-- Sprites cargados como `data:image/png;base64,...` (de ahí el tamaño del archivo final).
-- Sonido sintetizado en tiempo real con `AudioContext` (osciladores + ruido blanco filtrado), sin assets de audio.
+- Sprites cargados como `data:image/png;base64,...` y la pista musical como una constante base64 (de ahí el tamaño del archivo final).
+- Efectos de sonido sintetizados en tiempo real con `AudioContext` (osciladores + ruido blanco filtrado).
+- La música se decodifica una sola vez con `decodeAudioData` y se reproduce con un `AudioBufferSourceNode` en bucle; cada reproducción cuelga de su propio `GainNode`, de modo que reiniciar la partida durante un fundido no mezcla dos volúmenes. El volumen se ajusta con la constante `MUSIC_VOL` (0.32 por defecto) y la duración de la partida con `GAME_TIME` (80).
 
 ## Origen
 
