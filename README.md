@@ -42,6 +42,7 @@ Al llegar al borde de la torre caminando (o flotando pegado a ella) puedes agarr
 | [`roberto-v3_template.html`](roberto-v3_template.html) | Mismo código pero con los sprites/torre como placeholders (`/*__SPRITES__*/` y `/*__TOWER__*/`), útil para editar solo la lógica sin cargar las imágenes. |
 | [`sprites_data.js`](sprites_data.js) | `SPR_DATA`: sprites de Roberto en base64 (caminata, idle, ataques, escalada, tatsumaki, victoria, derrota). |
 | [`tower_data.js`](tower_data.js) | `TS_DATA`: sprites de la torre por estado de destrucción. |
+| [`vercel.json`](vercel.json) | Configuración de despliegue: reescribe la raíz `/` a `roberto-kaiju.html` para que el juego cargue directo al abrir la URL. |
 | [`NOTAS.md`](NOTAS.md) | Bitácora del checkpoint de desarrollo (contexto de la última sesión de edición). |
 
 ## Reconstruir el juego desde el template
